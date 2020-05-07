@@ -1,0 +1,25 @@
+1) Изменил в настройках VirtualBox в Network Adapter 2 добавил Attached to Bridged Adapter. После этого появился ip к которому можно подключиться. 
+
+
+2) Установка ssh 
+	в консоли
+	а) sudo apt-get update
+	б) sudo apt-get install openssh-server 		Устанавливаю
+	в) sudo systemctl status sshd				Проверяю, что он работает 
+	г) ip a   									Смотрим нужный ip, к которому будем подключаться
+	д) На хостовой системе в терминале 
+	   подключаемся к убунту
+	    ssh razlivanov@192.160.0.11 
+    е) ssh-keygen не делаю, потому что уже 
+    	есть ключ на основной машине 
+	ж) создаем папку на убунте .ssh
+		в нее копирую двай файла 
+		id_rsa & id_rsa.pub
+	з) на убунте делаем авторизованный
+		ключ
+		cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+
+	и) sudo apt-get install git 				Устанавливаем гит на убунту
+
+
+	Теперь подключение к гиту и убунте проиходит без пароля 	
