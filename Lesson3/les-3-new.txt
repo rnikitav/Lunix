@@ -1,0 +1,193 @@
+1. Написать небольшой скрипт, поместив его в домашний каталог который должен:
+- создать директорию /tmp/lesson3/permissions
+
+- внутри директории создать 3 файла, причем два из них это различного типа ссылки на предыдущий файл, 
+  а у одного есть небольшое текстовое содержимое
+
+- создать еще одну символическую ссылку в директории /tmp/lesson3/, которая указывает 
+  на ранее созданную символическую ссылку
+
+- вывести на экран матаданные всех созданных файлов, включая их иноды, 
+  а также содержимое только тех файлов, которые могут его показать. Должны ли выведенные 
+  иноды совпадать или отличаться? Почему?
+
+- переместить обе ссылки из /tmp/lesson3/permissions в директорию /tmp.
+
+- повторить предыдущий пункт и вывести метаданные с содержимым. Работают все ссылки?
+
+
+
+
+    а) vim les3                         Создаем файл с содержимым:
+
+                                        #!/bin/bash
+                                        mkdir -p ./Desktop/les3/permissions
+                                        cd Desktop/
+                                        cd les3/
+                                        cd permissions
+                                        echo 'Привет Мир!' > file1.txt
+                                        ln -s file1.txt file1_sim_link.txt
+                                        ln file1.txt file1_hard_link.txt
+                                        cd ..
+
+                                        ln -s ./permissions/file1_sim_link.txt file1_sim_link2.txt
+                                        ls -li
+                                        ls -li ./permissions/
+                                        cd permissions/
+                                        mv file1_hard_link.txt ../../
+                                        mv file1_sim_link.txt ../../
+                                        cd ../../
+                                        ls -li
+                                        ls -li les3/
+                                        ls -li les3/permissions/
+
+
+
+    б) айноды разные у символических ссылок, и так же другие от файла на который они ссылаются.
+       У жестких ссылок i-node одинаковый с файлом, на который они ссылаются.
+       В отличие от системы FAT (например, exFAT часто используется на флешках), в Linux принята 
+       организация файловых систем с отдельным хранением атрибутов. Каталог ссылается не сразу 
+       на файл, а на айнод (i-node), содержащий атрибуты (метаинформацию о файле) и 
+       ссылающийся на файлы. Такой подход определяет логику работы с ФС в Linux.
+
+    в) После переноса символической ссылки в другую папку персатали работать обе символические ссылки
+       Жесткая ссылка работает
+
+       После последнего ls -li ссылки символические стали подчеркиваться черным цветом, говорят о том,
+       что они неакивные 
+
+
+
+2. Заставить скрипт запускаться. Запустить. Удалить вручную все созданные скриптом файлы. 
+   В ответе указать содержимое скрипта, его вывод, команды для запуска и отчистки.
+
+
+
+
+    а) vim les3                                     Создаем файл (пример кода в задании 1)
+                                                    сохраняем
+
+    б) chmod 775 les3
+
+    в) ./les3                                       Запускаем файл. Вся программа отрабатывает
+
+    г) cd Desktop/
+     
+    е) rm -r les3                                   Удаляем папку со всем содержимым
+
+    ё)  cd ..
+        rm file1_hard_link.txt
+        rm file1_sim_link.txt
+
+    Вывод программы 
+
+    razlivanov@razlivanov-VirtualBox:~ $ ./les3
+    total 4
+    262832 lrwxrwxrwx 1 razlivanov razlivanov   32 мая  8 22:57 file1_sim_link2.txt -> ./permissions/file1_sim_link.txt
+    262818 drwxrwxr-x 2 razlivanov razlivanov 4096 мая  8 22:57 permissions
+    total 8
+    262819 -rw-rw-r-- 2 razlivanov razlivanov 21 мая  8 22:57 file1_hard_link.txt
+    262830 lrwxrwxrwx 1 razlivanov razlivanov  9 мая  8 22:57 file1_sim_link.txt -> file1.txt
+    262819 -rw-rw-r-- 2 razlivanov razlivanov 21 мая  8 22:57 file1.txt
+    total 16
+    262809 drwxrwsr-x 4 razlivanov developer  4096 мая  8 20:25 Develop
+    262819 -rw-rw-r-- 2 razlivanov razlivanov   21 мая  8 22:57 file1_hard_link.txt
+    262830 lrwxrwxrwx 1 razlivanov razlivanov    9 мая  8 22:57 file1_sim_link.txt -> file1.txt
+    262827 drwxrwxr-x 3 razlivanov razlivanov 4096 мая  8 22:57 les3
+    262813 drwxrwxr-x 4 razlivanov razlivanov 4096 мая  8 02:50 lesson3
+    total 4
+    262832 lrwxrwxrwx 1 razlivanov razlivanov   32 мая  8 22:57 file1_sim_link2.txt -> ./permissions/file1_sim_link.txt
+    262818 drwxrwxr-x 2 razlivanov razlivanov 4096 мая  8 22:57 permissions
+    total 4
+    262819 -rw-rw-r-- 2 razlivanov razlivanov 21 мая  8 22:57 file1.txt
+    
+    
+    razlivanov@razlivanov-VirtualBox:~ $ echo $?
+    0
+
+   
+
+
+
+3. Подготовка к большому делу.
+- самостоятельно изучить, что такое бит SetGID. Указать сценарий его 
+  использования (как на практике применяют??)
+- самостоятельно посмотреть, как изменить владельца пользователя и группу у файла (команда chmod)
+- используйте эти знания, чтобы решить проблему пермиссий во время выполнения задания 
+- Укажите, как именно решили проблему.
+
+
+
+
+    а) Использование SGID ( Set Group ID ) прав в Unix/Linux
+        setgid (сокращения от англ. set group ID upon execution — 
+        «установка ID группы во время выполнения») 
+       являются флагами прав доступа в Unix, которые разрешают пользователям запускать 
+       исполняемые файлы с правами группы исполняемого файла.
+       Так же, как SUID , установив SGID бит для файла он устанавливает ваш идентификатор 
+       группы для группы файла в то время как файл выполняется. Это действительно полезно в 
+       случае когда у вас есть реальные установки в многопользовательском режиме где у пользователей 
+       есть доступ к файлом. В одной домашней категории я действительно не нашел использования для SGID. 
+       Но основная концепция является такой же, как и у SUID, файлы у которых SGID бит устанавливается, 
+       то они принадлежат к этой группе , а не к этому пользователю.
+
+       chmod ​1777​​ /​developer​/​tmp
+       chmod ​+​t ​/​developer​/​tmp
+
+       В таком случае применяется уже не 3-значный, а 4-значный формат. 
+       Первый знак устанавливает расширенные атрибуты и рассчитывается как сумма для 
+       установленных расширенных битов: 1(sticky) + 2(SGID) + 4(SUID).
+
+    б) Более подробно использовал эту функцию в задание которое из методички , les-3.txt 
+
+    в) Команда chown позволяет поменять владельца либо сразу владельца и группу:
+       chown developer /var/www
+       chgrp -R developer /var/www d
+
+    г) Проблему пермиссий решил командой sudo потому что у корневых папок opt юсер и группа рут
+     
+    
+    
+    
+    
+    
+    
+4. Установка node из исходников
+- склонировать репозиторий https://github.com/nodejs/node в /opt/.
+- установить компилятор и необходимые зависимости, как написано в https://github.com/nodejs/node/blob/master/BUILDING.md#building-nodejs-on-supported-platforms
+- скомпилировать node (это займет какое-то время). Тесты прогонять никакие не нужно!
+- заставить бинарь node работать в терминале при вводе node из любого каталога в системе.   
+    
+    
+    
+    
+    а) cd / 
+
+    б) cd opt/
+
+    в) sudo git clone https://github.com/nodejs/node.git
+
+    г) sudo apt install build-essential checkinstall                Компилятор C++
+     
+    е) sudo apt-get install python g++ make
+
+    ё) sudo apt-get install libexecinfo
+
+    ж) sudo apt-get install python3-distutils
+
+    з) cd node/
+
+    и) sudo ./configure
+
+    к) sudo make -j1                                    Так как выделил одно ядро
+
+    л) sudo make install
+
+    razlivanov@razlivanov-VirtualBox:~ $ which node
+    /usr/local/bin/node
+    razlivanov@razlivanov-VirtualBox:~ $ $PATH
+    -bash: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin: No such file or directory
+    razlivanov@razlivanov-VirtualBox:~ $ 
+
+    Путь работает из любой директории
+
