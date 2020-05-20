@@ -1,0 +1,228 @@
+1. Создать пользователя, обладающего возможностью выполнять 
+   действия от имени суперпользователя.
+
+
+    а) sudo adduser test                        Создаем юзера test
+
+    б) sudo usermod -aG sudo test               Присоединяем его к группе суперпользователя sudo
+
+    в) su test                                  Переключаемся на этого пользователя
+
+    г) sudo whoami                              Проверяем чтобы вышло root
+     
+    е) sudo deluser test sudo                   Удаляем права суперппользователя
+
+    ё) su test                                  переключаемся на него и Проверяем
+
+    ж) su whoami                                test is not in the sudoers file.  
+                                                This incident will be reported.
+
+
+    2-й вариант 
+
+
+    а) useradd test2 -d /home/test2 -m          Создаем нового юзера test2 указываем домашнюю дир
+       -s /bin/bash -u 4000                     шел - баш и user ID 4000
+
+    б) sudo su 
+
+    в) passwd test2                             Устанавливаем ему пароль
+
+    г) su test2
+     
+    е) sudo su                                  Проверяем что у него нет доступа к суперпользователю
+                                                test2 is not in the sudoers file.  This incident will be reported.
+                                                Он не пренадлежит группе sudo
+
+    ё) su razlivanov
+
+    ж) sudo visudo -f /etc/sudoers.d/test2      test2      ALL=(ALL:ALL) NOPASSWD:ALL
+                                                Добавляем строчку
+
+    з) su test2
+
+    и) sudo su                                  Проверяем что заходит в рута 
+    
+
+
+2. Создать группу developer, несколько пользователей, входящих в эту группу. 
+   Создать директорию для совместной работы. Сделать так, чтобы созданные одними 
+   пользователями файлы могли изменять другие пользователи этой группы. 
+   Создать в директории для совместной работы поддиректорию для обмена файлами, 
+   но чтобы удалять файлы могли только их создатели.
+
+
+    а) sudo groupadd developer                  Создаем группу developer
+        можем задать GID (group ID)
+        sudo groupadd -g 1006 group6
+
+    б) cat /etc/group | grep develop             Проверяем создалась ли
+
+
+
+    в) sudo useradd -m -G developer -s /bin/bash ivanov     Создаем двух пользователей
+       sudo useradd -m -G developer -s /bin/bash petrov     входящие в эту группу
+
+    г) sudo passwd ivanov                       Устанавливаем для них пароль, т.к 
+       sudo passwd petrov                       По умолчанию 
+                                                для новых учетных записей без пароля 
+                                                заблокирован вход в систему
+     
+    е) mkdir ./Desktop/Develop                  Создаем новую папку для нашей группы
+
+    ё) sudo chgrp -R developer 
+       ./Desktop/Develop/                       Меняем папке Develop группу пользователей
+                                                на developer
+
+    ж) sudo chmod -R 2775                       Настройка прав доступа для папки Develop
+       ./Desktop/Develop/                       -R разрешает проведение рекурсивных 
+                                                    операций в подкаталоги
+                                                
+                                                
+                                                2 - тут выполнаяет : новые файлы всегда будут 
+                                                получать ту группу, 
+                                                которая стоит у папки, в которой они находятся;
+    
+    
+    
+
+Создать в директории для совместной работы поддиректорию для обмена файлами, 
+   но чтобы удалять файлы могли только их создатели
+
+
+
+    а) mkdir ShareDir                           Создаем директорию от рута и даем права
+
+    б) sudo chmod -R 1775 ShareDir/             Из рута даем права на папку
+                                                Теперь при создание файла пользователем
+                                                его u - будет он сам и группа его имени
+                                                Поэтому другой пользователь может читать файл,
+                                                но удалить его только создатель может 
+                                                Тут первая цифра (1) устанавливает sticky-битом
+                                                т.е удалять может только владелец или суперползователь 
+
+    
+
+    Или можно сделать 
+    sudo chmod -R 775 ShareDir/
+
+    и потом добавить 
+    sudo +t ShareDir/
+
+
+3. Используя условную конструкцию ниже, которая проверяет, успешно ли завершилась 
+   предыдущая команда, напишите скрипт, который должен добавить в систему 
+   2 группы web и geekbrains, если их еще нет. Если они есть, то нужно вывести эту 
+   информацию на экран, а также вывести их уникальный GID и всех пользователей, 
+   которые добавлены в эти группы.
+
+   После этого необобходимо создать пользователя rockstar с 
+   фиксированным UID=143, для которого группа web является основной группой, 
+   а группа geekbrains - второстепенной.
+
+   Если пользователь уже существует, необходимо удостовериться, что настройки выше указаны верно. 
+   Если нет - то изменить. Вывести информационное сообщение на экран.
+
+if [[ $? == 0 ]] ; then
+    echo "success"
+else
+    echo "fail"
+fi
+
+
+    
+    а) vim script                                   Создаем файл с содержимым: 
+
+    б) chmod 777 script
+
+    в) sudo apt install members
+
+
+
+    ******  содержание файла script
+
+
+
+#!/bin/bash
+if [[ `grep 'web' /etc/group` ]]
+then
+        echo 'Список входящих юзеров в группу web:'
+        echo 'Пользователи для которых группа web основная'
+        g=$(members --two-lines web | sed '2d')
+        echo $g
+        echo 'Пользователи для которых группа web дополнтельная'
+        sup=$(members --two-lines web | sed '1d')
+        echo $sup
+        a=$(cat /etc/group | grep web | cut -d ':' -f3)
+        echo 'Уникальный GID группы web = ' $a
+        echo 'group web is Alredy Exist. Sorry!'
+        echo '------------------------------------'
+else
+sudo groupadd -g 1007 web
+        if [[ $? == 0 ]]
+        then
+                echo 'group web is Add successful'
+                echo '------------------------------------'
+                if [[ `cat /etc/passwd | grep proba1` == '' ]]
+                then sudo useradd proba1 -M -N -g web
+                fi
+                if [[ `cat /etc/passwd | grep proba2` == '' ]]
+                then sudo useradd proba2 -M -N -G 1007
+                fi
+        else
+                echo 'Some problem with adding group.'
+        fi
+fi
+if [[ `grep 'geekbrains' /etc/group` ]]
+then
+        echo 'Список входящих юзеров в группу geekbrains:'
+        echo 'Пользователи для которых группа geekbrains основная'
+        gGeek=$(members --two-lines geekbrains | sed '2d')
+        echo $gGeek
+        echo 'Пользователи для которых группа geekbrains дополнтельная'
+        supGeek=$(members --two-lines geekbrains | sed '1d')
+        echo $supGeek
+        a=$(cat /etc/group | grep geekbrains | cut -d ':' -f3)
+        echo 'Уникальный GID = ' $a
+        echo 'group geekbrains Alredy Exist. Sorry!'
+        echo '------------------------------------'
+else
+        sudo groupadd -g 1008 geekbrains
+        if [[ $? == 0 ]]
+                then
+                        if [[ `cat /etc/passwd | grep proba3` == '' ]]
+                                then sudo useradd proba3 -M -N -g geekbrains
+                        fi
+                        echo 'group geekbrains is Add successful'
+                        echo '------------------------------------'
+        else
+                echo 'Some problem with adding group.'
+        fi
+fi
+if [[ `cat /etc/passwd | grep superstar` ]]
+then
+        echo 'Пользователь " superstar " уже есть'
+        UIDproba=$(id -g superstar)
+        if [[ $UIDproba != 1007 ]]
+        then
+                sudo usermod -g 1007 superstar
+                echo 'Была изменена основная группа у пользователя superstar на web'
+        fi
+        UIDproba2=$(id -G superstar)
+        if [[ $UIDproba2 != 1008 ]]
+        then
+                sudo usermod -G geekbrains superstar
+                echo 'Была изменена дополнительная группа у пользователя superstar на geekbrains'
+        fi
+        id superstar
+else
+
+
+
+sudo useradd -u 143 -g 1008 -G 1007 -M -N superstar  // Сделал специально изначально другие группы, 
+                                                     // чтобы при втором вызове скрипта их поменять на верные
+
+
+
+
+fi
