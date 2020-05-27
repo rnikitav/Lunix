@@ -1,0 +1,149 @@
+1. Написать скрипт, который удаляет из текстового файла пустые строки 
+   и заменяет маленькие символы на большие (воспользуйтесь tr или sed). 
+   Скрипт должен выводить информацию о том, как его использовать.
+
+
+   а) touch script1.sh                        Содаем файл script1.sh
+   б) sudo chmod +x script1.sh                Права на выполнение
+   
+   Содержимое файла:
+   
+        #!/bin/bash
+        usage(){
+                cat << EOF
+        This script delete all empty lines and make all lower letters to UPPER
+        You can do this script with several files
+        Usage: $0 [file(s)] 
+        Examples:
+                $0 --help - print this help
+                $0  /home/razlivanov/Desktop/lesson6/les-6.txt
+        EOF
+        }
+        while [ $# -gt 0 ] ; do
+                if [ $1 == '--help' ] ; then
+                        usage
+                        exit 0
+                fi
+                if [[ -f $1 || -h $1 ]] ; then
+                        echo "$1"
+                        FILES+=("$1")
+                        sed '/^$/d' $1 | tr [a-z] [A-Z]
+                        shift
+                        continue
+                fi
+        done
+        (( ${#FILES[@]} == 0 )) && echo "Files not specified." && exit 1
+
+
+2. Определить, какие ошибки записывается в /var/log/auth.log при попытке 
+   неудачной аутентификации пользователя для ssh подключения, для 
+   подключения через терминал - ctrl+alt+f3 и для подключения с помощью 
+   виртуального терминала (gui приложения). Сделать скрипт мониторинга 
+   лога /var/log/auth.log на наличие этих событий, который выводит 
+   сообщения о попытке неудачной аутентификации на экран. Проверить 
+   скрипт, выполнив ошибочную регистрацию с терминала, с помощью 
+   виртуального терминала и через ssh. Скрипт должен выводить 
+   информацию о том, как его использовать.
+
+
+
+   а) touch script2.sh                        Содаем файл script2.sh
+   б) sudo chmod +x script2.sh                Права на выполнение
+   
+   Содержимое файла:
+   
+   #!/bin/bash
+
+   tail -f /var/log/auth.log | grep 'Authentication failure'
+
+
+   При попытке неудачной: 
+
+   May 26 09:36:41 razlivanov-VirtualBox su[2662]: pam_authenticate: Authentication failure
+
+
+
+
+3. Написать скрипт, который в указанной с помощью параметра -d директории 
+создает указанные файлы. Если какой-либо из указанных файлов уже 
+существует, то выводить предупреждение на экран.Сообщение - это НЕ ошибка!
+Если указано несколько директорий, то выводить ошибку с соответствующей 
+информацией. Созданным файлам, которые имеют расширение .sh нужно дать 
+права на выполнение. Скрипт должен выводить информацию о том, как его 
+использовать и понятные сообщения об ошибках. Примеры запуска:
+
+./script.sh -d /tmp/task_3
+./script.sh file1 file2 -d dire file3
+./script.sh -d file1 file2 file3
+./script.sh -d /tmp/task_3 file1 file2.sh file3
+./script.sh -d /tmp/task_3 -d /tmp/task_3_2 file1 file2.sh file3
+
+
+   а) touch script3.sh                        Содаем файл script3.sh
+   б) sudo chmod +x script3.sh                Права на выполнение
+   
+
+
+
+
+
+   Содержимое файла:
+
+
+
+
+
+#!/bin/bash
+#set -e
+usage(){
+	cat << EOF
+Содает файлы в директории, которая указывается после параметра -d. Если файл есть, сообщит об этом
+Если указано две директории, то будет ошибка. Файлы можно указывать в любом месте в консоли, любое количество раз
+Usage: $0 -d[dir]  [file(s)] 
+Examples:
+	$0 --help - print this help
+	$0  -d dir file1 file2
+	$0 file1 file2 -d dir file4
+EOF
+}
+while [ $# -gt 0 ] ; do
+	if [ $1 == '--help' ] ; then
+		usage
+		exit 0
+	fi
+	case $1 in
+		-d)
+			DIR+=("$2")
+#			mkdir -p "$2"
+			shift
+			shift
+		;;
+		*)
+			FILES+=("$1")
+			shift
+		;;
+	esac
+done
+if [ ${#DIR[@]} -gt 1 ] ; then
+	echo "Вы указали две дериктории ${DIR[@]}"
+	echo 'Директория не создана и не созданы файлы'
+	exit 1
+else
+	mkdir -p $DIR
+	if [[ $? == 0 ]] ; then
+		echo "Ваша директория:  $DIR   успешно создана"
+	else
+		echo 'Дириктория не создана'
+	fi
+
+fi
+#echo "$DIR"
+(( ${#FILES[@]} == 0 )) && echo "Вы не передали ни одного файла." && exit 2
+for file in ${FILES[@]} ; do
+	if [ -f $DIR/$file ] ; then
+		echo "Файл: $file уже существует в данной директории"
+	else
+		touch "$DIR/$file"
+		echo "Файл: $file создан"
+	fi
+done
