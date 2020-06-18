@@ -1,0 +1,102 @@
+1. Написать Dockerfile для сборки образа, который будет запускать контейнер с django приложением, доуступным по ссылке: https://github.com/mtuktarov/linux_goodies/tree/master/docker/django-test-app. Для запуска приложения использовать команду python manage.py runserver 0.0.0.0:8000, где manage.py - это файл из репозитория.
+
+2. Зная, что в этом приложении django хранит базу в файле db.sqlite3, нужно избавиться от ошибки, которая появится при старте:
+You have 15 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): admin, auth, contenttypes, polls, sessions.
+Run 'python manage.py migrate' to apply them.
+
+3. Запустить контейнер так, чтобы приложение было доступным из браузера Ubuntu, используя Ubuntu hostname.
+
+4. Создать аккаунт на Dockerhub и залить туда образ. Указать имя образа.
+
+
+
+1)$ mkdir lesson8
+2)$ cd lesson8/
+3)$ git clone https://github.com/mtuktarov/linux_goodies.git
+
+4)$ cd linux_goodies/docker/django-test-app
+
+5)$ vim Dockerfile: 
+
+    FROM python:alpine
+
+    COPY requirements.txt /tmp/requirements.txt
+
+    RUN pip3 install -Ur /tmp/requirements.txt
+
+    RUN rm -rf /tmp/requirements.txt
+
+    COPY manage.py /opt/manage.py
+
+    COPY demo /opt/demo/
+
+    COPY polls /opt/polls/
+
+    CMD ["python", "/opt/manage.py", "runserver","0.0.0.0:8000"]
+
+6) $ docker build . -t my:last
+
+7) $ docker run -ti my:last
+
+8) Открываем новую вкладку в терминале убунту и запускаем 
+   $ docker ps
+
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS               NAMES
+
+3e39bea3ca3e        my:last             "python /opt/manage.…"   About a minute ago   Up 59 seconds                           tender_williams
+
+9) $ docker exec -it 3e39bea3ca3e sh
+
+10) cat /etc/*release           проверяем NAME 
+
+11) ip a                        Смотрим ip = inet 172.17.0.2/16
+
+12) python /opt/manage.py migrate            
+
+    Operations to perform:
+    Apply all migrations: admin, auth, contenttypes, polls, sessions
+    Running migrations:
+    Applying contenttypes.0001_initial... OK
+    Applying auth.0001_initial... OK
+    Applying admin.0001_initial... OK
+    Applying admin.0002_logentry_remove_auto_add... OK
+    Applying contenttypes.0002_remove_content_type_name... OK
+    Applying auth.0002_alter_permission_name_max_length... OK
+    Applying auth.0003_alter_user_email_max_length... OK
+    Applying auth.0004_alter_user_username_opts... OK
+    Applying auth.0005_alter_user_last_login_null... OK
+    Applying auth.0006_require_contenttypes_0002... OK
+    Applying auth.0007_alter_validators_add_error_messages... OK
+    Applying auth.0008_alter_user_username_max_length... OK
+    Applying auth.0009_alter_user_last_name_max_length... OK
+    Applying polls.0001_initial... OK
+    Applying sessions.0001_initial... OK
+
+
+
+3. sudo vim /etc/docker/daemon.json
+    #{
+    #    "bip": "172.0.0.2/8"
+    #}
+
+
+    sudo vim /etc/hosts     добавляем
+
+    172.0.0.2       Ubuntu
+
+    docker run -ti -p 8000:8000 my:last 
+
+    curl -L ubuntu:8000
+
+
+
+4.
+
+    docker login                заходим в свой профиль 
+    docker tag my:last rnikitav/linuxgeek:latest
+    docker push rnikitav/linuxgeek:latest
+
+
+    Ссылка на докер репозиторий 
+    https://hub.docker.com/repository/registry-1.docker.io/rnikitav/linuxgeek/tags?page=1
+
